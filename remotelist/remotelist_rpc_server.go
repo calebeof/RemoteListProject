@@ -1,10 +1,10 @@
 package main
 
 import (
+	remotelist "calebeof/remotelist/pkg"
 	"fmt"
 	"net"
 	"net/rpc"
-	"ppgti/remotelist/pkg"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 
 	if err != nil {
 		fmt.Println("Something went wrong while listing to port: %w\n")
-		return 
+		return
 	}
 
 	for {
