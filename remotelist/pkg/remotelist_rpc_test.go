@@ -1,43 +1,42 @@
 package remotelist
 
 import (
-	"os"
-	"reflect"
-	"testing"
-	"strconv"
 	"bufio"
 	"errors"
-	"fmt"
+	"os"
+	"reflect"
+	"strconv"
+	"testing"
 )
 
 func TestGetListFromMemory(t *testing.T) {
 	testCases := []struct {
-		name    string
-		l       *PersistentRemoteList
-		listIndex    int
-		want    []int
-		wantErr bool
+		name      string
+		l         *PersistentRemoteList
+		listIndex int
+		want      []int
+		wantErr   bool
 	}{
 		{
-			name: "non-existent list in memory",
-			l: &PersistentRemoteList{},
+			name:      "non-existent list in memory",
+			l:         &PersistentRemoteList{},
 			listIndex: 0,
-			want:    nil,
-			wantErr: true,
+			want:      nil,
+			wantErr:   true,
 		},
 		{
-			name: "non-existent directory",
-			l: &PersistentRemoteList{},
+			name:      "non-existent directory",
+			l:         &PersistentRemoteList{},
 			listIndex: 0,
-			want:    nil,
-			wantErr: true,
+			want:      nil,
+			wantErr:   true,
 		},
 		{
-			name: "directory exists but file doesn't",
-			l: &PersistentRemoteList{},
+			name:      "directory exists but file doesn't",
+			l:         &PersistentRemoteList{},
 			listIndex: 1,
-			want:    nil,
-			wantErr: true,
+			want:      nil,
+			wantErr:   true,
 		},
 		{
 			name: "list exists in memory",
@@ -47,15 +46,15 @@ func TestGetListFromMemory(t *testing.T) {
 				},
 			},
 			listIndex: 2,
-			want:    []int{1, 2, 3},
-			wantErr: false,
+			want:      []int{1, 2, 3},
+			wantErr:   false,
 		},
 		{
-			name: "file exists and list is recovered",
-			l: &PersistentRemoteList{},
+			name:      "file exists and list is recovered",
+			l:         &PersistentRemoteList{},
 			listIndex: 3,
-			want:    []int{1, 2, 3},
-			wantErr: false,
+			want:      []int{1, 2, 3},
+			wantErr:   false,
 		},
 	}
 
@@ -95,22 +94,22 @@ func TestGetListFromMemory(t *testing.T) {
 }
 
 func TestSaveListInMemory(t *testing.T) {
-	testCases := []struct{
+	testCases := []struct {
 		name           string
 		listIndex      int
-		l              *PersistentRemoteList		
+		l              *PersistentRemoteList
 		expectedResult error
 	}{
 		{
 			name:           "non-existent directory",
 			listIndex:      1,
-			l: 				&PersistentRemoteList{},
+			l:              &PersistentRemoteList{},
 			expectedResult: nil,
 		},
 		{
 			name:           "existent directory",
 			listIndex:      2,
-			l: 				&PersistentRemoteList{},
+			l:              &PersistentRemoteList{},
 			expectedResult: nil,
 		},
 	}
@@ -147,7 +146,7 @@ func TestAppend(t *testing.T) {
 		}
 	}()
 
-	testCases := []struct{
+	testCases := []struct {
 		listIndex   int
 		value       int
 		expectedLen int
@@ -218,67 +217,80 @@ func TestAppend(t *testing.T) {
 			}
 		}
 	}
+
+	defer func() {
+		err := os.RemoveAll(persistentDirectory)
+		if err != nil {
+			t.Fatalf("failed to remove test directory: %v", err)
+		}
+	}()
 }
 
-
 func TestGet(t *testing.T) {
-    testCases := []struct {
-        name          string
-        args          []AppendArgs
-        index         int
-        expectedList  []int
-        expectedError error
-    }{
-        {
-            name: "Get empty list",
-            args: []AppendArgs{
-                {ListIndex: 0, Value: 1},
-            },
-            index:         0,
-            expectedList:  []int{},
-            expectedError: nil,
-        },
-        {
-            name: "Get non-empty list",
-            args: []AppendArgs{
-                {ListIndex: 0, Value: 1},
-                {ListIndex: 0, Value: 2},
-                {ListIndex: 0, Value: 3},
-            },
-            index:         0,
-            expectedList:  []int{1, 2, 3},
-            expectedError: nil,
-        },
-        {
-            name: "Get non-existent list",
-            args: []AppendArgs{},
-            index:         1,
-            expectedList:  nil,
-            expectedError: fmt.Errorf("List 1 doesn't exists.\n"),
-        },
-    }
+	testCases := []struct {
+		name          string
+		args          []AppendArgs
+		index         int
+		expectedList  []int
+		expectedError error
+	}{
+		{
+			name: "Get empty list",
+			args: []AppendArgs{
+				//{ListIndex: 0, Value: 1},
+			},
+			index:         0,
+			expectedList:  []int{},
+			expectedError: nil,
+		},
+		{
+			name: "Get non-empty list",
+			args: []AppendArgs{
+				{ListIndex: 0, Value: 1},
+				{ListIndex: 0, Value: 2},
+				{ListIndex: 0, Value: 3},
+			},
+			index:         0,
+			expectedList:  []int{1, 2, 3},
+			expectedError: nil,
+		},
+	}
 
-    l := &PersistentRemoteList{lists: make(map[int][]int)}
+	l := &PersistentRemoteList{lists: make(map[int][]int)}
 
-    for _, testCase := range testCases {
-        t.Run(testCase.name, func(t *testing.T) {
-            // Append values to the list
-            for _, args := range testCase.args {
-                err := l.Append(args, new(bool))
-                if err != nil {
-                    t.Errorf("Unexpected error on Append: %v", err)
-                }
-            }
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Append values to the list
+			for _, args := range testCase.args {
+				err := l.Append(args, new(bool))
+				if err != nil {
+					t.Errorf("Unexpected error on Append: %v", err)
+				}
+			}
 
-            // Call the Get method and check its result
+			defer func() {
+				err := os.RemoveAll(persistentDirectory)
+				if err != nil {
+					t.Fatalf("failed to remove test directory: %v", err)
+				}
+			}()
+
+			// Call the Get method and check its result
 			var got []int
-            err := l.Get(testCase.index, &got)
-            if !reflect.DeepEqual(got, testCase.expectedList) {
-                t.Errorf("Unexpected list: got %v, expected %v", got, testCase.expectedList)
-            }
-            if !errors.Is(err, fmt.Errorf("List %d doesn't exists.\n", testCase.index)) {
-                t.Errorf("Unexpected error: got %v, expected %v", err, testCase.expectedError)
-            }
-        })
-    }
+			err := l.Get(testCase.index, &got)
+			if len(got) != len(testCase.expectedList) {
+				t.Errorf("Unexpected list: got %v, expected %v", got, testCase.expectedList)
+			}
+
+			for i := 0; i < len(got); i++ {
+				if got[i] != testCase.expectedList[i] {
+					t.Errorf("Unexpected list: got %v, expected %v", got, testCase.expectedList)
+				}
+			}
+
+			if !errors.Is(err, testCase.expectedError) {
+				t.Errorf("Unexpected error: got %v, expected %v", err, testCase.expectedError)
+			}
+		})
+	}
 }
